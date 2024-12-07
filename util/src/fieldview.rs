@@ -54,6 +54,11 @@ impl<'a, T> FieldView<'a, T> {
         }
     }
 
+    pub fn get_by_offset_or<'r>(&'r self, off: usize, alt: &'r T) -> &'r T {
+        let pos = self.from_offset(off);
+        self.get_or(pos.0, pos.1, alt)
+    }
+
     pub fn row(&self, index: usize) -> &[T] {
         let o = index * self.stride;
         &self.data[o..o + self.width]
@@ -96,6 +101,68 @@ impl<'a> From<&'a Input> for FieldView<'a, u8> {
         let stride = width + 1 + ((b[width] == b'\r') as usize);
         let height = b.len().div_ceil(stride);
         Self::new(b, width, stride, height)
+    }
+}
+
+pub struct BorderedFieldView<'a, T> {
+    view: FieldView<'a, T>,
+    border: T,
+}
+
+impl<'a, T> BorderedFieldView<'a, T> {
+    pub fn new(view: FieldView<'a, T>, border: T) -> Self {
+        Self { view, border }
+    }
+
+    pub fn get(&self, x: usize, y: usize) -> &T {
+        self.view.get_or(x, y, &self.border)
+    }
+
+    pub fn width(&self) -> usize {
+        self.view.width
+    }
+
+    pub fn height(&self) -> usize {
+        self.view.height
+    }
+
+    pub fn stride(&self) -> usize {
+        self.view.stride
+    }
+
+    pub fn offset(&self, x: usize, y: usize) -> usize {
+        self.view.offset(x, y)
+    }
+
+    pub fn from_offset(&self, o: usize) -> (usize, usize) {
+        self.view.from_offset(o)
+    }
+
+    pub fn data(&self) -> &[T] {
+        self.view.data
+    }
+
+    pub fn row(&self, index: usize) -> &[T] {
+        self.view.row(index)
+    }
+
+    pub fn col(&self, index: usize) -> FieldColumn<'a, T> {
+        self.view.col(index)
+    }
+
+    pub fn rows(&self) -> FieldRows<'a, T> {
+        self.view.rows()
+    }
+
+    pub fn cols(&self) -> FieldCols<'a, T> {
+        self.view.cols()
+    }
+}
+
+impl<'a, T> Index<usize> for BorderedFieldView<'a, T> {
+    type Output = T;
+    fn index(&self, index: usize) -> &Self::Output {
+        self.view.get_by_offset_or(index, &self.border)
     }
 }
 
