@@ -101,10 +101,7 @@ impl<'a> Parser<'a> {
         <T as FromParser<'a>>::parse_from(self)
     }
 
-    pub fn parse_iter<'slf, 's, T: FromParser<'a>>(
-        &'slf mut self,
-        separator: &'s str,
-    ) -> ParseIter<'slf, 'a, 's, T> {
+    pub fn parse_iter<T: FromParser<'a>>(&'a mut self, separator: &'a str) -> ParseIter<'a, T> {
         ParseIter {
             parser: self,
             sep: separator,
@@ -118,14 +115,14 @@ pub trait FromParser<'p>: Sized + 'p {
     fn parse_from(parser: &mut Parser<'p>) -> Option<Self>;
 }
 
-pub struct ParseIter<'slf, 'a, 's, T: FromParser<'a>> {
-    parser: &'slf mut Parser<'a>,
-    sep: &'s str,
+pub struct ParseIter<'a, T: FromParser<'a>> {
+    parser: &'a mut Parser<'a>,
+    sep: &'a str,
     skip: bool,
     _data: PhantomData<T>,
 }
 
-impl<'slf, 'a, 's, T: FromParser<'a>> Iterator for ParseIter<'slf, 'a, 's, T> {
+impl<'a, T: FromParser<'a>> Iterator for ParseIter<'a, T> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
