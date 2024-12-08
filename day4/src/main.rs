@@ -28,7 +28,7 @@ fn main() -> Result<()> {
         };
         base += idx;
 
-        let (x, y) = field.from_offset(base);
+        let (x, y) = field.from_offset::<usize>(base);
         if x >= 3 {
             total1 += check1(data, base, -1);
             if y >= 3 {

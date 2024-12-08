@@ -1,5 +1,12 @@
-use crate::Input;
+use crate::{Coord, Input};
 use std::{iter::StepBy, ops::Index};
+
+pub trait AnyInt: Copy {
+    fn to_isize(self) -> isize;
+    fn to_usize(self) -> usize;
+    fn from_isize(v: isize) -> Self;
+    fn from_usize(v: usize) -> Self;
+}
 
 pub struct FieldView<'a, T> {
     data: &'a [T],
@@ -30,24 +37,29 @@ impl<'a, T> FieldView<'a, T> {
         self.stride
     }
 
-    pub fn offset(&self, x: usize, y: usize) -> usize {
-        y * self.stride + x
+    pub fn offset<I: AnyInt>(&self, x: I, y: I) -> usize {
+        y.to_usize() * self.stride + x.to_usize()
     }
 
-    pub fn from_offset(&self, o: usize) -> (usize, usize) {
-        (o % self.stride, o / self.stride)
+    pub fn from_offset<I: AnyInt>(&self, o: usize) -> (I, I) {
+        (
+            AnyInt::from_usize(o % self.stride),
+            AnyInt::from_usize(o / self.stride),
+        )
     }
 
     pub fn data(&self) -> &[T] {
         self.data
     }
 
-    pub fn get(&self, x: usize, y: usize) -> &T {
+    pub fn get<I: AnyInt>(&self, x: I, y: I) -> &T {
         &self.data[self.offset(x, y)]
     }
 
-    pub fn get_or<'r>(&'r self, x: usize, y: usize, alt: &'r T) -> &'r T {
-        if (0..self.width).contains(&x) && (0..self.height).contains(&y) {
+    pub fn get_or<'r, I: AnyInt>(&'r self, x: I, y: I, alt: &'r T) -> &'r T {
+        if (0..self.width as isize).contains(&(x.to_isize()))
+            && (0..self.height as isize).contains(&(y.to_isize()))
+        {
             &self.data[self.offset(x, y)]
         } else {
             alt
@@ -55,7 +67,7 @@ impl<'a, T> FieldView<'a, T> {
     }
 
     pub fn get_by_offset_or<'r>(&'r self, off: usize, alt: &'r T) -> &'r T {
-        let pos = self.from_offset(off);
+        let pos = self.from_offset::<usize>(off);
         self.get_or(pos.0, pos.1, alt)
     }
 
@@ -87,10 +99,24 @@ impl<'a, T> Clone for FieldView<'a, T> {
     }
 }
 
-impl<'a, T> Index<usize> for FieldView<'a, T> {
+impl<'a, T, I: AnyInt> Index<I> for FieldView<'a, T> {
     type Output = T;
-    fn index(&self, index: usize) -> &Self::Output {
-        &self.data[index]
+    fn index(&self, index: I) -> &Self::Output {
+        &self.data[index.to_usize()]
+    }
+}
+
+impl<'a, T, I: AnyInt> Index<(I, I)> for FieldView<'a, T> {
+    type Output = T;
+    fn index(&self, pos: (I, I)) -> &Self::Output {
+        &self.data[self.offset(pos.0, pos.1)]
+    }
+}
+
+impl<'a, T, I: AnyInt> Index<Coord<I>> for FieldView<'a, T> {
+    type Output = T;
+    fn index(&self, pos: Coord<I>) -> &Self::Output {
+        &self.data[self.offset(pos.x, pos.y)]
     }
 }
 
@@ -159,10 +185,24 @@ impl<'a, T> BorderedFieldView<'a, T> {
     }
 }
 
-impl<'a, T> Index<usize> for BorderedFieldView<'a, T> {
+impl<'a, T, I: AnyInt> Index<I> for BorderedFieldView<'a, T> {
     type Output = T;
-    fn index(&self, index: usize) -> &Self::Output {
-        self.view.get_by_offset_or(index, &self.border)
+    fn index(&self, index: I) -> &Self::Output {
+        self.view.get_by_offset_or(index.to_usize(), &self.border)
+    }
+}
+
+impl<'a, T, I: AnyInt> Index<(I, I)> for BorderedFieldView<'a, T> {
+    type Output = T;
+    fn index(&self, pos: (I, I)) -> &Self::Output {
+        self.view.get_or(pos.0, pos.1, &self.border)
+    }
+}
+
+impl<'a, T, I: AnyInt> Index<Coord<I>> for BorderedFieldView<'a, T> {
+    type Output = T;
+    fn index(&self, pos: Coord<I>) -> &Self::Output {
+        self.view.get_or(pos.x, pos.y, &self.border)
     }
 }
 
@@ -307,3 +347,53 @@ impl<'a, T: std::fmt::Debug> std::fmt::Debug for FieldColumn<'a, T> {
         f.debug_list().entries(self.clone().into_iter()).finish()
     }
 }
+
+macro_rules! impl_uint_anyint {
+    ($t:ty) => {
+        impl AnyInt for $t {
+            fn to_usize(self) -> usize {
+                self as usize
+            }
+            fn to_isize(self) -> isize {
+                (self as usize) as isize
+            }
+            fn from_usize(v: usize) -> Self {
+                v as Self
+            }
+            fn from_isize(v: isize) -> Self {
+                (v as usize) as Self
+            }
+        }
+    };
+}
+
+macro_rules! impl_sint_anyint {
+    ($t:ty) => {
+        impl AnyInt for $t {
+            fn to_usize(self) -> usize {
+                (self as isize) as usize
+            }
+            fn to_isize(self) -> isize {
+                self as isize
+            }
+            fn from_usize(v: usize) -> Self {
+                (v as isize) as Self
+            }
+            fn from_isize(v: isize) -> Self {
+                v as Self
+            }
+        }
+    };
+}
+
+impl_uint_anyint!(u8);
+impl_uint_anyint!(u16);
+impl_uint_anyint!(u32);
+impl_uint_anyint!(u64);
+impl_uint_anyint!(usize);
+
+impl_sint_anyint!(i8);
+impl_sint_anyint!(i16);
+impl_sint_anyint!(i32);
+impl_sint_anyint!(i64);
+impl_sint_anyint!(isize);
