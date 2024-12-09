@@ -8,6 +8,9 @@ repository.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+u128 = []
+
 [dependencies]
 anyhow.workspace = true
 util.workspace = true
