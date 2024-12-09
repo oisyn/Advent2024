@@ -108,7 +108,7 @@ fn main() -> Result<()> {
 
     while front < back {
         let f = (data[front] - b'0') as u32;
-        // println!("{f} * {}", front / 2);
+        // println!("{f}*{}", front / 2);
         total1 += sum(write, write + f - 1) * (front / 2) as uresult;
         write += f;
 
@@ -116,13 +116,13 @@ fn main() -> Result<()> {
         let mut gap = (data[front] - b'0') as u32;
         while gap > 0 {
             let min = last_len.min(gap);
-            // println!("{min} * {}", back / 2);
+            // println!("{min}*{}", back / 2);
             total1 += sum(write, write + min - 1) * (back / 2) as uresult;
             last_len -= min;
             gap -= min;
             write += min;
 
-            if last_len == 0 {
+            if last_len == 0 && back - 2 > front {
                 back -= 2;
                 last_len = (data[back] - b'0') as u32;
             }
@@ -132,7 +132,7 @@ fn main() -> Result<()> {
     }
 
     if last_len > 0 {
-        // println!("{last_len} * {}", back / 2);
+        // println!("{last_len}*{}", back / 2);
         total1 += sum(write, write + last_len - 1) * (back / 2) as uresult;
     }
 
