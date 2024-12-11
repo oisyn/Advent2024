@@ -107,6 +107,11 @@ impl<T> From<Coord<T>> for (T, T) {
     }
 }
 
+impl std::fmt::Display for Coord<i32> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "({}, {})", self.x, self.y)
+    }
+}
 macro_rules! impl_rhs_mul {
     ($t:ty) => {
         impl Mul<Coord<$t>> for $t {

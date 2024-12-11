@@ -9,7 +9,8 @@ fn main() -> Result<()> {
     const DIRS: [(i32, i32); 4] = [(0, -1), (1, 0), (0, 1), (-1, 0)];
 
     let mut dir = 0;
-    let pos = field.from_offset(field.data().iter().position(|&c| c == b'^').unwrap());
+    let pos =
+        field.tuple_from_offset::<usize>(field.data().iter().position(|&c| c == b'^').unwrap());
     let mut pos = (pos.0 as i32, pos.1 as i32);
     let start_pos = pos;
     let mut visited = HashSet::with_capacity(1000);

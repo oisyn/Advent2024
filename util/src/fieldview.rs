@@ -1,4 +1,4 @@
-use crate::{Coord, Input};
+use crate::{coord, Coord, Input};
 use std::{iter::StepBy, ops::Index};
 
 pub trait AnyInt: Copy {
@@ -41,11 +41,15 @@ impl<'a, T> FieldView<'a, T> {
         y.to_usize() * self.stride + x.to_usize()
     }
 
-    pub fn from_offset<I: AnyInt>(&self, o: usize) -> (I, I) {
+    pub fn tuple_from_offset<I: AnyInt>(&self, o: usize) -> (I, I) {
         (
             AnyInt::from_usize(o % self.stride),
             AnyInt::from_usize(o / self.stride),
         )
+    }
+
+    pub fn coord_from_offset<I: AnyInt>(&self, o: usize) -> Coord<I> {
+        self.tuple_from_offset(o).into()
     }
 
     pub fn data(&self) -> &[T] {
@@ -67,7 +71,7 @@ impl<'a, T> FieldView<'a, T> {
     }
 
     pub fn get_by_offset_or<'r>(&'r self, off: usize, alt: &'r T) -> &'r T {
-        let pos = self.from_offset::<usize>(off);
+        let pos = self.tuple_from_offset::<usize>(off);
         self.get_or(pos.0, pos.1, alt)
     }
 
@@ -90,6 +94,11 @@ impl<'a, T> FieldView<'a, T> {
 
     pub fn cols(&self) -> FieldCols<'a, T> {
         FieldCols(self.clone())
+    }
+
+    pub fn coords<I: AnyInt>(&self) -> impl Iterator<Item = Coord<I>> {
+        let (w, h) = (self.width, self.height);
+        (0..h).flat_map(move |y| (0..w).map(move |x| coord(I::from_usize(x), I::from_usize(y))))
     }
 }
 
@@ -156,12 +165,16 @@ impl<'a, T> BorderedFieldView<'a, T> {
         self.view.stride
     }
 
-    pub fn offset(&self, x: usize, y: usize) -> usize {
+    pub fn offset<I: AnyInt>(&self, x: I, y: I) -> usize {
         self.view.offset(x, y)
     }
 
-    pub fn from_offset(&self, o: usize) -> (usize, usize) {
-        self.view.from_offset(o)
+    pub fn tuple_from_offset<I: AnyInt>(&self, o: usize) -> (I, I) {
+        self.view.tuple_from_offset(o)
+    }
+
+    pub fn coord_from_offset<I: AnyInt>(&self, o: usize) -> Coord<I> {
+        self.view.coord_from_offset(o)
     }
 
     pub fn data(&self) -> &[T] {
