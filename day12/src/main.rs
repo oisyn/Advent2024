@@ -70,9 +70,9 @@ fn main() -> Result<()> {
             .124.
             .8c..
             .....
-            
+
             There are 16 possible situations (a and b denoting regions with the same character but possibly different ids):
-            
+
             Situation | Value | delta | delta | notes
                       |       | perim | sides |
             .....           0                   n/a
@@ -81,10 +81,10 @@ fn main() -> Result<()> {
             .a...           1                   n/a
             ..c..
 
-            ..a..           2      +2       0   
+            ..a..           2      +2       0
             ..c..
 
-            .aa..           3      +2      +2   
+            .aa..           3      +2      +2
             ..c..
 
             ...a.           4                   n/a
@@ -93,44 +93,39 @@ fn main() -> Result<()> {
             .a.a.           5                   n/a
             ..c..
 
-            ..aa.           6      +2      +2   
+            ..aa.           6      +2      +2
             ..c..
 
-            .aaa.           7      +2      +4   
+            .aaa.           7      +2      +4
             ..c..
 
-            .....           8      +2       0   
+            .....           8      +2       0
             .ac..
 
-            .a...           9      +2      +2   
+            .a...           9      +2      +2
             .ac..
 
             ..a..          10       0      -2   merge a and b if different ids, delta relative to merged values
             .bc..
 
-            .aa..          11       0      -2   
+            .aa..          11       0      -2
             .ac..
 
-            ...a.          12      +2       0             
+            ...a.          12      +2       0
             .ac..
 
-            .a.a.          13      +2      +2   
+            .a.a.          13      +2      +2
             .ac..
 
             ..aa.          14       0       0   merge a and b if different ids, delta relative to merged values
             .bc..
 
-            .aaa.          15       0       0      
+            .aaa.          15       0       0
             .ac..
         */
 
-        const PERIM_DELTA: [i32; 16] = [
-            0, 0, 2, 2, 0, 0, 2, 2, 2, 2, 0, 0, 2, 2, 0, 0
-        ];
-
-        const SIDE_DELTA: [i32; 16] = [
-            0, 0, 0, 2, 0, 0, 2, 4, 0, 2, -2, -2, 0, 2, 0, 0
-        ];
+        const PERIM_DELTA: [i32; 16] = [0, 0, 2, 2, 0, 0, 2, 2, 2, 2, 0, 0, 2, 2, 0, 0];
+        const SIDE_DELTA: [i32; 16] = [0, 0, 0, 2, 0, 0, 2, 4, 0, 2, -2, -2, 0, 2, 0, 0];
 
         for i in 0..4 {
             let n = coord + NEIGHBORS[i];
@@ -188,17 +183,17 @@ fn main() -> Result<()> {
     let total1 = regions
         .iter()
         .filter_map(|r| match r {
-            RegionRef::Value(region) => Some(region.area * region.perimeter),
+            RegionRef::Value(region) => Some(region.area as u64 * region.perimeter as u64),
             _ => None,
         })
-        .sum::<i32>();
+        .sum::<u64>();
     let total2 = regions
         .iter()
         .filter_map(|r| match r {
-            RegionRef::Value(region) => Some(region.area * region.sides),
+            RegionRef::Value(region) => Some(region.area as u64 * region.sides as u64),
             _ => None,
         })
-        .sum::<i32>();
+        .sum::<u64>();
 
     drop(input);
     println!("{total1} - {total2}");
