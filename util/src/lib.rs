@@ -31,19 +31,23 @@ where
 
 pub trait IncrementalIdentity {
     type Identity;
-    fn increment() -> Self::Identity;
+    fn incremental_identity() -> Self::Identity;
 }
 
 pub trait Increment: IncrementalIdentity + Copy + std::ops::AddAssign<Self::Identity> {
     fn pre_inc(&mut self) -> Self {
         let r = *self;
-        *self += Self::increment();
+        *self += Self::incremental_identity();
         r
     }
 
     fn post_inc(&mut self) -> Self {
-        *self += Self::increment();
+        *self += Self::incremental_identity();
         *self
+    }
+
+    fn get_inc(&self) -> Self {
+        self.clone().pre_inc()
     }
 }
 
@@ -52,13 +56,17 @@ impl<T> Increment for T where T: IncrementalIdentity + Copy + std::ops::AddAssig
 pub trait Decrement: IncrementalIdentity + Copy + std::ops::SubAssign<Self::Identity> {
     fn pre_dec(&mut self) -> Self {
         let r = *self;
-        *self -= Self::increment();
+        *self -= Self::incremental_identity();
         r
     }
 
     fn post_dec(&mut self) -> Self {
-        *self -= Self::increment();
+        *self -= Self::incremental_identity();
         *self
+    }
+
+    fn get_dec(&self) -> Self {
+        self.clone().pre_dec()
     }
 }
 
@@ -69,7 +77,7 @@ macro_rules! impl_additive_identities {
         $(
             impl IncrementalIdentity for $t {
                 type Identity = $t;
-                fn increment() -> Self::Identity {
+                fn incremental_identity() -> Self::Identity {
                     1 as $t
                 }
             }

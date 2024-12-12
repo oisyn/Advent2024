@@ -96,6 +96,11 @@ impl<'a, T> FieldView<'a, T> {
         FieldCols(self.clone())
     }
 
+    pub fn offsets(&self) -> impl Iterator<Item = usize> {
+        let (w, h, s) = (self.width, self.height, self.stride);
+        (0..h).flat_map(move |y| (0..w).map(move |x| y * s + x))
+    }
+
     pub fn coords<I: AnyInt>(&self) -> impl Iterator<Item = Coord<I>> {
         let (w, h) = (self.width, self.height);
         (0..h).flat_map(move |y| (0..w).map(move |x| coord(I::from_usize(x), I::from_usize(y))))
@@ -195,6 +200,16 @@ impl<'a, T> BorderedFieldView<'a, T> {
 
     pub fn cols(&self) -> FieldCols<'a, T> {
         self.view.cols()
+    }
+
+    pub fn offsets(&self) -> impl Iterator<Item = usize> {
+        let (w, h, s) = (self.view.width, self.view.height, self.view.stride);
+        (0..h).flat_map(move |y| (0..w).map(move |x| y * s + x))
+    }
+
+    pub fn coords<I: AnyInt>(&self) -> impl Iterator<Item = Coord<I>> {
+        let (w, h) = (self.view.width, self.view.height);
+        (0..h).flat_map(move |y| (0..w).map(move |x| coord(I::from_usize(x), I::from_usize(y))))
     }
 }
 

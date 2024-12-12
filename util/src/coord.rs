@@ -1,3 +1,4 @@
+use crate::{Decrement, Increment};
 use std::ops::*;
 
 #[derive(Default, Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Debug, Hash)]
@@ -13,6 +14,57 @@ pub const fn coord<T>(x: T, y: T) -> Coord<T> {
 impl<T> Coord<T> {
     pub fn new(x: T, y: T) -> Self {
         Self { x, y }
+    }
+}
+
+impl<T: Increment + Decrement> Coord<T> {
+    pub fn left(&self) -> Self {
+        coord(self.x.get_dec(), self.y)
+    }
+
+    pub fn right(&self) -> Self {
+        coord(self.x.get_inc(), self.y)
+    }
+
+    pub fn up(&self) -> Self {
+        coord(self.x, self.y.get_dec())
+    }
+
+    pub fn down(&self) -> Self {
+        coord(self.x, self.y.get_inc())
+    }
+
+    pub fn left_up(&self) -> Self {
+        coord(self.x.get_dec(), self.y.get_dec())
+    }
+
+    pub fn right_up(&self) -> Self {
+        coord(self.x.get_inc(), self.y.get_dec())
+    }
+
+    pub fn left_down(&self) -> Self {
+        coord(self.x.get_dec(), self.y.get_inc())
+    }
+
+    pub fn right_down(&self) -> Self {
+        coord(self.x.get_inc(), self.y.get_inc())
+    }
+
+    pub fn neighbors4(&self) -> [Self; 4] {
+        [self.left(), self.right(), self.up(), self.down()]
+    }
+
+    pub fn neighbors8(&self) -> [Self; 8] {
+        [
+            self.left_up(),
+            self.up(),
+            self.right_up(),
+            self.left(),
+            self.right(),
+            self.left_down(),
+            self.down(),
+            self.right_down(),
+        ]
     }
 }
 
