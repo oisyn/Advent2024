@@ -1,12 +1,5 @@
-use crate::{coord, Coord, Input};
+use crate::{coord, AnyInt, Coord, Input};
 use std::{iter::StepBy, ops::Index};
-
-pub trait AnyInt: Copy {
-    fn to_isize(self) -> isize;
-    fn to_usize(self) -> usize;
-    fn from_isize(v: isize) -> Self;
-    fn from_usize(v: usize) -> Self;
-}
 
 pub struct FieldView<'a, T> {
     data: &'a [T],
@@ -375,53 +368,3 @@ impl<'a, T: std::fmt::Debug> std::fmt::Debug for FieldColumn<'a, T> {
         f.debug_list().entries(self.clone().into_iter()).finish()
     }
 }
-
-macro_rules! impl_uint_anyint {
-    ($t:ty) => {
-        impl AnyInt for $t {
-            fn to_usize(self) -> usize {
-                self as usize
-            }
-            fn to_isize(self) -> isize {
-                (self as usize) as isize
-            }
-            fn from_usize(v: usize) -> Self {
-                v as Self
-            }
-            fn from_isize(v: isize) -> Self {
-                (v as usize) as Self
-            }
-        }
-    };
-}
-
-macro_rules! impl_sint_anyint {
-    ($t:ty) => {
-        impl AnyInt for $t {
-            fn to_usize(self) -> usize {
-                (self as isize) as usize
-            }
-            fn to_isize(self) -> isize {
-                self as isize
-            }
-            fn from_usize(v: usize) -> Self {
-                (v as isize) as Self
-            }
-            fn from_isize(v: isize) -> Self {
-                v as Self
-            }
-        }
-    };
-}
-
-impl_uint_anyint!(u8);
-impl_uint_anyint!(u16);
-impl_uint_anyint!(u32);
-impl_uint_anyint!(u64);
-impl_uint_anyint!(usize);
-
-impl_sint_anyint!(i8);
-impl_sint_anyint!(i16);
-impl_sint_anyint!(i32);
-impl_sint_anyint!(i64);
-impl_sint_anyint!(isize);
