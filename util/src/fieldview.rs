@@ -1,4 +1,4 @@
-use crate::{coord, AnyInt, Coord, Input};
+use crate::{coord, Coord, FromPrimitive, Input, PrimitiveInt, ToPrimitive};
 use std::{iter::StepBy, ops::Index};
 
 pub struct FieldView<'a, T> {
@@ -30,18 +30,18 @@ impl<'a, T> FieldView<'a, T> {
         self.stride
     }
 
-    pub fn offset<I: AnyInt>(&self, x: I, y: I) -> usize {
-        y.to_usize() * self.stride + x.to_usize()
+    pub fn offset<I: PrimitiveInt + ToPrimitive<usize>>(&self, x: I, y: I) -> usize {
+        y.to() as usize * self.stride + x.to()
     }
 
-    pub fn tuple_from_offset<I: AnyInt>(&self, o: usize) -> (I, I) {
+    pub fn tuple_from_offset<I: FromPrimitive<usize>>(&self, o: usize) -> (I, I) {
         (
-            AnyInt::from_usize(o % self.stride),
-            AnyInt::from_usize(o / self.stride),
+            FromPrimitive::from(o % self.stride),
+            FromPrimitive::from(o / self.stride),
         )
     }
 
-    pub fn coord_from_offset<I: AnyInt>(&self, o: usize) -> Coord<I> {
+    pub fn coord_from_offset<I: FromPrimitive<usize>>(&self, o: usize) -> Coord<I> {
         self.tuple_from_offset(o).into()
     }
 
@@ -49,13 +49,18 @@ impl<'a, T> FieldView<'a, T> {
         self.data
     }
 
-    pub fn get<I: AnyInt>(&self, x: I, y: I) -> &T {
+    pub fn get<I: PrimitiveInt + ToPrimitive<usize>>(&self, x: I, y: I) -> &T {
         &self.data[self.offset(x, y)]
     }
 
-    pub fn get_or<'r, I: AnyInt>(&'r self, x: I, y: I, alt: &'r T) -> &'r T {
-        if (0..self.width as isize).contains(&(x.to_isize()))
-            && (0..self.height as isize).contains(&(y.to_isize()))
+    pub fn get_or<'r, I: PrimitiveInt + ToPrimitive<isize> + ToPrimitive<usize>>(
+        &'r self,
+        x: I,
+        y: I,
+        alt: &'r T,
+    ) -> &'r T {
+        if (0..self.width as isize).contains(&(x.to()))
+            && (0..self.height as isize).contains(&(y.to()))
         {
             &self.data[self.offset(x, y)]
         } else {
@@ -94,9 +99,9 @@ impl<'a, T> FieldView<'a, T> {
         (0..h).flat_map(move |y| (0..w).map(move |x| y * s + x))
     }
 
-    pub fn coords<I: AnyInt>(&self) -> impl Iterator<Item = Coord<I>> {
+    pub fn coords<I: FromPrimitive<usize>>(&self) -> impl Iterator<Item = Coord<I>> {
         let (w, h) = (self.width, self.height);
-        (0..h).flat_map(move |y| (0..w).map(move |x| coord(I::from_usize(x), I::from_usize(y))))
+        (0..h).flat_map(move |y| (0..w).map(move |x| coord(I::from(x), I::from(y))))
     }
 }
 
@@ -106,21 +111,21 @@ impl<'a, T> Clone for FieldView<'a, T> {
     }
 }
 
-impl<'a, T, I: AnyInt> Index<I> for FieldView<'a, T> {
+impl<'a, T, I: PrimitiveInt + ToPrimitive<usize>> Index<I> for FieldView<'a, T> {
     type Output = T;
     fn index(&self, index: I) -> &Self::Output {
-        &self.data[index.to_usize()]
+        &self.data[index.to()]
     }
 }
 
-impl<'a, T, I: AnyInt> Index<(I, I)> for FieldView<'a, T> {
+impl<'a, T, I: PrimitiveInt + ToPrimitive<usize>> Index<(I, I)> for FieldView<'a, T> {
     type Output = T;
     fn index(&self, pos: (I, I)) -> &Self::Output {
         &self.data[self.offset(pos.0, pos.1)]
     }
 }
 
-impl<'a, T, I: AnyInt> Index<Coord<I>> for FieldView<'a, T> {
+impl<'a, T, I: PrimitiveInt + ToPrimitive<usize>> Index<Coord<I>> for FieldView<'a, T> {
     type Output = T;
     fn index(&self, pos: Coord<I>) -> &Self::Output {
         &self.data[self.offset(pos.x, pos.y)]
@@ -163,15 +168,15 @@ impl<'a, T> BorderedFieldView<'a, T> {
         self.view.stride
     }
 
-    pub fn offset<I: AnyInt>(&self, x: I, y: I) -> usize {
+    pub fn offset<I: PrimitiveInt + ToPrimitive<usize>>(&self, x: I, y: I) -> usize {
         self.view.offset(x, y)
     }
 
-    pub fn tuple_from_offset<I: AnyInt>(&self, o: usize) -> (I, I) {
+    pub fn tuple_from_offset<I: FromPrimitive<usize>>(&self, o: usize) -> (I, I) {
         self.view.tuple_from_offset(o)
     }
 
-    pub fn coord_from_offset<I: AnyInt>(&self, o: usize) -> Coord<I> {
+    pub fn coord_from_offset<I: FromPrimitive<usize>>(&self, o: usize) -> Coord<I> {
         self.view.coord_from_offset(o)
     }
 
@@ -200,27 +205,31 @@ impl<'a, T> BorderedFieldView<'a, T> {
         (0..h).flat_map(move |y| (0..w).map(move |x| y * s + x))
     }
 
-    pub fn coords<I: AnyInt>(&self) -> impl Iterator<Item = Coord<I>> {
+    pub fn coords<I: FromPrimitive<usize>>(&self) -> impl Iterator<Item = Coord<I>> {
         let (w, h) = (self.view.width, self.view.height);
-        (0..h).flat_map(move |y| (0..w).map(move |x| coord(I::from_usize(x), I::from_usize(y))))
+        (0..h).flat_map(move |y| (0..w).map(move |x| coord(I::from(x), I::from(y))))
     }
 }
 
-impl<'a, T, I: AnyInt> Index<I> for BorderedFieldView<'a, T> {
+impl<'a, T, I: PrimitiveInt + ToPrimitive<usize>> Index<I> for BorderedFieldView<'a, T> {
     type Output = T;
     fn index(&self, index: I) -> &Self::Output {
-        self.view.get_by_offset_or(index.to_usize(), &self.border)
+        self.view.get_by_offset_or(index.to(), &self.border)
     }
 }
 
-impl<'a, T, I: AnyInt> Index<(I, I)> for BorderedFieldView<'a, T> {
+impl<'a, T, I: PrimitiveInt + ToPrimitive<isize> + ToPrimitive<usize>> Index<(I, I)>
+    for BorderedFieldView<'a, T>
+{
     type Output = T;
     fn index(&self, pos: (I, I)) -> &Self::Output {
         self.view.get_or(pos.0, pos.1, &self.border)
     }
 }
 
-impl<'a, T, I: AnyInt> Index<Coord<I>> for BorderedFieldView<'a, T> {
+impl<'a, T, I: PrimitiveInt + ToPrimitive<isize> + ToPrimitive<usize>> Index<Coord<I>>
+    for BorderedFieldView<'a, T>
+{
     type Output = T;
     fn index(&self, pos: Coord<I>) -> &Self::Output {
         self.view.get_or(pos.x, pos.y, &self.border)

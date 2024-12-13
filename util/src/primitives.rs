@@ -1,13 +1,19 @@
-pub trait AnyInt: Copy {
-    fn to_isize(self) -> isize;
-    fn to_usize(self) -> usize;
-    fn from_isize(v: isize) -> Self;
-    fn from_usize(v: usize) -> Self;
-}
+pub trait Primitive: Copy + ToPrimitive<usize> + FromPrimitive<usize> {}
+pub trait PrimitiveInt: Primitive {}
+pub trait PrimitiveFloat: Primitive {}
 
-pub trait Primitive: Copy {}
 pub trait ToPrimitive<T: Primitive> {
     fn to(self) -> T;
+}
+
+pub trait FromPrimitive<T: Primitive> {
+    fn from(value: T) -> Self;
+}
+
+impl<T: Primitive, U: ToPrimitive<T> + Primitive> FromPrimitive<U> for T {
+    fn from(value: U) -> Self {
+        value.to()
+    }
 }
 
 pub trait IncrementalIdentity {
@@ -68,51 +74,6 @@ macro_rules! impl_additive_identities {
 
 impl_additive_identities!(i8, i16, i32, i64, i128, isize, u8, u16, u32, u64, u128, usize, f32, f64);
 
-macro_rules! impl_uint_anyint {
-    ($($t:ty),+) => {
-        $(
-            impl AnyInt for $t {
-                fn to_usize(self) -> usize {
-                    self as usize
-                }
-                fn to_isize(self) -> isize {
-                    (self as usize) as isize
-                }
-                fn from_usize(v: usize) -> Self {
-                    v as Self
-                }
-                fn from_isize(v: isize) -> Self {
-                    (v as usize) as Self
-                }
-            }
-        )+
-    };
-}
-
-macro_rules! impl_sint_anyint {
-    ($($t:ty),+) => {
-        $(
-            impl AnyInt for $t {
-                fn to_usize(self) -> usize {
-                    (self as isize) as usize
-                }
-                fn to_isize(self) -> isize {
-                    self as isize
-                }
-                fn from_usize(v: usize) -> Self {
-                    (v as isize) as Self
-                }
-                fn from_isize(v: isize) -> Self {
-                    v as Self
-                }
-            }
-        )+
-    };
-}
-
-impl_uint_anyint!(u8, u16, u32, u64, usize);
-impl_sint_anyint!(i8, i16, i32, i64, isize);
-
 macro_rules! impl_to_primitive {
     ($t:ty => $($u:ty),+) => {
         $(
@@ -133,4 +94,22 @@ macro_rules! impl_primitive {
     };
 }
 
+macro_rules! impl_primitive_int {
+    ($($t:ty),+) => {
+        $(
+            impl PrimitiveInt for $t {}
+        )+
+    };
+}
+
+macro_rules! impl_primitive_float {
+    ($($t:ty),+) => {
+        $(
+            impl PrimitiveFloat for $t {}
+        )+
+    };
+}
+
 impl_primitive!(i8, i16, i32, i64, i128, isize, u8, u16, u32, u64, u128, usize, f32, f64);
+impl_primitive_int!(i8, i16, i32, i64, i128, isize, u8, u16, u32, u64, u128, usize);
+impl_primitive_float!(f32, f64);
