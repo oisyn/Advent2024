@@ -26,6 +26,10 @@ impl<T> Coord<T> {
     {
         coord(self.x.to(), self.y.to())
     }
+
+    pub fn tuple(self) -> (T, T) {
+        (self.x, self.y)
+    }
 }
 
 impl<T: Increment + Decrement> Coord<T> {

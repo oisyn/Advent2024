@@ -7,8 +7,8 @@ pub use input::*;
 mod primitives;
 pub use primitives::*;
 
-mod fieldview;
-pub use fieldview::*;
+mod field;
+pub use field::*;
 
 mod coord;
 pub use coord::*;

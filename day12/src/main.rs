@@ -137,11 +137,11 @@ fn main() -> Result<()> {
         // print!("{} at {coord} [mask {mask}]: ", to_str(std::slice::from_ref(&c)));
 
         if mask & 8 == 8 {
-            ids[numids.pre_inc()] = resolve_offset(&regions, regids[offset - 1]);
+            ids[numids.post_inc()] = resolve_offset(&regions, regids[offset - 1]);
         }
 
         if mask & 2 == 2 {
-            ids[numids.pre_inc()] =
+            ids[numids.post_inc()] =
                 resolve_offset(&regions, regids[offset - field.stride() as usize]);
         }
 

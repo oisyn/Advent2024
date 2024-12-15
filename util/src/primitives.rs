@@ -23,14 +23,14 @@ pub trait IncrementalIdentity {
 
 pub trait Increment: IncrementalIdentity + Copy + std::ops::AddAssign<Self::Identity> {
     fn pre_inc(&mut self) -> Self {
-        let r = *self;
         *self += Self::incremental_identity();
-        r
+        *self
     }
 
     fn post_inc(&mut self) -> Self {
+        let r = *self;
         *self += Self::incremental_identity();
-        *self
+        r
     }
 
     fn get_inc(&self) -> Self {
@@ -42,14 +42,14 @@ impl<T> Increment for T where T: IncrementalIdentity + Copy + std::ops::AddAssig
 
 pub trait Decrement: IncrementalIdentity + Copy + std::ops::SubAssign<Self::Identity> {
     fn pre_dec(&mut self) -> Self {
-        let r = *self;
         *self -= Self::incremental_identity();
-        r
+        *self
     }
 
     fn post_dec(&mut self) -> Self {
+        let r = *self;
         *self -= Self::incremental_identity();
-        *self
+        r
     }
 
     fn get_dec(&self) -> Self {
