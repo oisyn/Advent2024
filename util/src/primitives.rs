@@ -16,63 +16,81 @@ impl<T: Primitive, U: ToPrimitive<T> + Primitive> FromPrimitive<U> for T {
     }
 }
 
-pub trait IncrementalIdentity {
-    type Identity;
-    fn incremental_identity() -> Self::Identity;
+pub trait Increment: Copy {
+    fn pre_inc(&mut self) -> Self;
+    fn post_inc(&mut self) -> Self;
+    fn get_inc(self) -> Self;
 }
 
-pub trait Increment: IncrementalIdentity + Copy + std::ops::AddAssign<Self::Identity> {
-    fn pre_inc(&mut self) -> Self {
-        *self += Self::incremental_identity();
-        *self
-    }
-
-    fn post_inc(&mut self) -> Self {
-        let r = *self;
-        *self += Self::incremental_identity();
-        r
-    }
-
-    fn get_inc(&self) -> Self {
-        self.clone().pre_inc()
-    }
+pub trait Decrement: Copy {
+    fn pre_dec(&mut self) -> Self;
+    fn post_dec(&mut self) -> Self;
+    fn get_dec(self) -> Self;
 }
 
-impl<T> Increment for T where T: IncrementalIdentity + Copy + std::ops::AddAssign<T::Identity> {}
-
-pub trait Decrement: IncrementalIdentity + Copy + std::ops::SubAssign<Self::Identity> {
-    fn pre_dec(&mut self) -> Self {
-        *self -= Self::incremental_identity();
-        *self
-    }
-
-    fn post_dec(&mut self) -> Self {
-        let r = *self;
-        *self -= Self::incremental_identity();
-        r
-    }
-
-    fn get_dec(&self) -> Self {
-        self.clone().pre_dec()
-    }
-}
-
-impl<T> Decrement for T where T: IncrementalIdentity + Copy + std::ops::SubAssign<T::Identity> {}
-
-macro_rules! impl_additive_identities {
+macro_rules! impl_increments {
     ($($t:ty),+) => {
         $(
-            impl IncrementalIdentity for $t {
-                type Identity = $t;
-                fn incremental_identity() -> Self::Identity {
-                    1 as $t
+            impl Increment for $t {
+                fn pre_inc(&mut self) -> Self {
+                    *self += 1 as $t;
+                    *self
+                }
+                fn post_inc(&mut self) -> Self {
+                    let old = *self;
+                    *self += 1 as $t;
+                    old
+                }
+                fn get_inc(self) -> Self {
+                    self + 1 as $t
+                }
+            }
+
+            impl Decrement for $t {
+                fn pre_dec(&mut self) -> Self {
+                    *self -= 1 as $t;
+                    *self
+                }
+                fn post_dec(&mut self) -> Self {
+                    let old = *self;
+                    *self -= 1 as $t;
+                    old
+                }
+                fn get_dec(self) -> Self {
+                    self - 1 as $t
                 }
             }
         )+
     };
 }
 
-impl_additive_identities!(i8, i16, i32, i64, i128, isize, u8, u16, u32, u64, u128, usize, f32, f64);
+impl_increments!(i8, i16, i32, i64, i128, isize, u8, u16, u32, u64, u128, usize, f32, f64);
+
+impl Increment for bool {
+    fn pre_inc(&mut self) -> Self {
+        *self = true;
+        true
+    }
+    fn post_inc(&mut self) -> Self {
+        std::mem::replace(self, true)
+    }
+    fn get_inc(self) -> Self {
+        true
+    }
+}
+
+impl Decrement for bool {
+    fn pre_dec(&mut self) -> Self {
+        *self = false;
+        false
+    }
+    fn post_dec(&mut self) -> Self {
+        std::mem::replace(self, false)
+    }
+    fn get_dec(self) -> Self {
+        false
+    }
+}
 
 macro_rules! impl_to_primitive {
     ($t:ty => $($u:ty),+) => {

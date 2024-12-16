@@ -1,9 +1,7 @@
 #![allow(dead_code)]
 
-use core::slice;
-use std::collections::HashSet;
-
 use anyhow::Result;
+use core::slice;
 use itertools::*;
 use util::*;
 
@@ -75,7 +73,13 @@ fn main() -> Result<()> {
     let mut field = FieldMutView::from(field_vec.as_mut_slice());
 
     let mut robot = coord(robot_start.x * 2, robot_start.y);
-    let mut checked = HashSet::with_capacity(1000);
+    let mut checked_vec = vec![false; field.width() * field.height()];
+    let mut checked = FieldMutView::new(
+        &mut checked_vec,
+        field.width(),
+        field.width(),
+        field.height(),
+    );
     let mut queue = Vec::with_capacity(1000);
     'outer: for &c in code_in.as_bytes() {
         let dir = match c {
@@ -127,8 +131,10 @@ fn main() -> Result<()> {
             }
         } else {
             'ok: {
+                for &p in &queue {
+                    checked[p] = false;
+                }
                 queue.clear();
-                checked.clear();
                 match field[pos] {
                     b'#' => {
                         continue 'outer;
@@ -144,6 +150,7 @@ fn main() -> Result<()> {
                     }
                     _ => unreachable!(),
                 }
+
                 for i in 0.. {
                     if i == queue.len() {
                         break;
@@ -159,11 +166,11 @@ fn main() -> Result<()> {
                         (c0, c1) => {
                             if c0 == b'[' {
                                 queue.push(pos);
-                            } else if c0 == b']' && checked.insert(pos.left()) {
+                            } else if c0 == b']' && !checked[pos.left()].post_inc() {
                                 queue.push(pos.left());
                             }
 
-                            if c1 == b'[' && checked.insert(pos.right()) {
+                            if c1 == b'[' && !checked[pos.right()].post_inc() {
                                 queue.push(pos.right());
                             }
                         }
