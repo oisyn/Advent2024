@@ -83,6 +83,22 @@ impl<T: Increment + Decrement> Coord<T> {
     }
 }
 
+impl<T: Neg<Output = T>> Coord<T> {
+    pub fn turn_left(self) -> Self {
+        Self {
+            x: self.y,
+            y: -self.x,
+        }
+    }
+
+    pub fn turn_right(self) -> Self {
+        Self {
+            x: -self.y,
+            y: self.x,
+        }
+    }
+}
+
 impl<T: Neg<Output = T>> Neg for Coord<T> {
     type Output = Self;
     fn neg(self) -> Self::Output {

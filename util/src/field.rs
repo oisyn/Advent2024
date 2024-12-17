@@ -79,12 +79,12 @@ pub trait Field {
         ))
     }
 
-    fn offsets(&self) -> impl Iterator<Item = usize> {
+    fn offsets(&self) -> impl Iterator<Item = usize> + 'static {
         let (w, h, s) = (self.width(), self.height(), self.stride());
         (0..h).flat_map(move |y| (0..w).map(move |x| y * s + x))
     }
 
-    fn coords<I: FromPrimitive<usize>>(&self) -> impl Iterator<Item = Coord<I>> {
+    fn coords<I: FromPrimitive<usize>>(&self) -> impl Iterator<Item = Coord<I>> + 'static {
         let (w, h) = (self.width(), self.height());
         (0..h).flat_map(move |y| (0..w).map(move |x| coord(I::from(x), I::from(y))))
     }
