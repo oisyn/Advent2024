@@ -1,6 +1,9 @@
 #![allow(dead_code)]
 
-use std::{cmp::Reverse, collections::BinaryHeap};
+use std::{
+    cmp::Reverse,
+    collections::{BinaryHeap, HashMap},
+};
 
 use anyhow::Result;
 use util::*;
@@ -50,51 +53,75 @@ fn main() -> Result<()> {
         field.coord_from_offset::<i32>(field.data().iter().position(|&c| c == b'S').unwrap());
     let end = field.coord_from_offset::<i32>(field.data().iter().position(|&c| c == b'E').unwrap());
 
-    let mut queue = BinaryHeap::with_capacity(1000);
+    let mut queue = BinaryHeap::with_capacity(10000);
     let mut reverse =
         FieldMutView::create_with_value([0_u32; 4], field.width(), field.width(), field.height());
 
-    queue.push(Reverse((0_u32, CoordAndDir::new(start, 0), 0_u32)));
+    let mut cost_map = HashMap::with_capacity(100);
+    cost_map.insert(0, vec![(CoordAndDir::new(start, 0), 0_u32)]);
+    queue.push(Reverse(0));
+
+    fn add_to_queue(
+        queue: &mut BinaryHeap<Reverse<u32>>,
+        cost_map: &mut HashMap<u32, Vec<(CoordAndDir, u32)>>,
+        cost: u32,
+        pos_and_dir: CoordAndDir,
+        prev_dir: u32,
+    ) {
+        let vec = cost_map.entry(cost).or_default();
+        if vec.is_empty() {
+            queue.push(Reverse(cost));
+        }
+        vec.push((pos_and_dir, prev_dir));
+    }
 
     let mut total1 = u32::MAX;
 
-    while let Some(Reverse((cost, pos_and_dir, prev_dir))) = queue.pop() {
+    while let Some(Reverse(cost)) = queue.pop() {
         if cost > total1 {
             break;
         }
+        let vec = cost_map.remove(&cost).unwrap();
 
-        let (pos, dir) = pos_and_dir.into();
-        if field[pos] == b'E' {
-            total1 = cost;
-            let e = &mut reverse[pos][dir as usize];
-            *e |= cost | BASE_FLAG << prev_dir;
-            continue;
-        }
-
-        let e = &mut reverse[pos][dir as usize];
-        if *e & FLAG_MASK == 0 {
-            *e = cost | BASE_FLAG << prev_dir;
-        } else {
-            if *e & COST_MASK == cost {
-                *e |= BASE_FLAG << prev_dir;
-            }
-            continue;
-        }
-
-        for (new_dir, add_cost) in [(dir, 1), (dir + 1 & 3, 1001), (dir + 3 & 3, 1001)] {
-            let new_pos = pos + dir_coord(new_dir);
-            if field[new_pos] == b'#' {
+        for (pos_and_dir, prev_dir) in vec {
+            let (pos, dir) = pos_and_dir.into();
+            if field[pos] == b'E' {
+                total1 = cost;
+                let e = &mut reverse[pos][dir as usize];
+                *e |= cost | BASE_FLAG << prev_dir;
                 continue;
             }
 
-            let new_cost = cost + add_cost;
-            queue.push(Reverse((new_cost, CoordAndDir::new(new_pos, new_dir), dir)));
-        }
+            let e = &mut reverse[pos][dir as usize];
+            if *e & FLAG_MASK == 0 {
+                *e = cost | BASE_FLAG << prev_dir;
+            } else {
+                if *e & COST_MASK == cost {
+                    *e |= BASE_FLAG << prev_dir;
+                }
+                continue;
+            }
 
-        if pos == start && field[start.left()] != b'#' {
-            let new_pos = start.left();
-            let new_cost = cost + 2001;
-            queue.push(Reverse((new_cost, CoordAndDir::new(new_pos, 2), 0)));
+            for (new_dir, add_cost) in [(dir, 1), (dir + 1 & 3, 1001), (dir + 3 & 3, 1001)] {
+                let new_pos = pos + dir_coord(new_dir);
+                if field[new_pos] == b'#' {
+                    continue;
+                }
+
+                let new_cost = cost + add_cost;
+                add_to_queue(
+                    &mut queue,
+                    &mut cost_map,
+                    new_cost,
+                    (new_pos, new_dir).into(),
+                    dir,
+                );
+            }
+
+            if pos == start && field[start.left()] != b'#' {
+                let new_pos = start.left();
+                add_to_queue(&mut queue, &mut cost_map, 2001, (new_pos, 2).into(), dir);
+            }
         }
     }
 
@@ -115,8 +142,8 @@ fn main() -> Result<()> {
         let mut total = 0;
         loop {
             let (pos, dir) = pos_dir.into();
-            let e = &mut reverse[pos][dir as usize];
             total += !visited[pos].post_inc() as u32;
+            let e = &mut reverse[pos][dir as usize];
             let dirs = *e >> FLAG_SHIFT;
             if pos == end || dirs == 0 {
                 return total;
