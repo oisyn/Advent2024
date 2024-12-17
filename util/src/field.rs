@@ -1,6 +1,7 @@
 use crate::{coord, Coord, FromPrimitive, Input, PrimitiveInt, ToPrimitive};
 use std::{
     iter::StepBy,
+    marker::PhantomData,
     ops::{Index, IndexMut},
 };
 
@@ -79,12 +80,12 @@ pub trait Field {
         ))
     }
 
-    fn offsets(&self) -> impl Iterator<Item = usize> {
+    fn offsets(&self) -> impl Iterator<Item = usize> + 'static {
         let (w, h, s) = (self.width(), self.height(), self.stride());
         (0..h).flat_map(move |y| (0..w).map(move |x| y * s + x))
     }
 
-    fn coords<I: FromPrimitive<usize>>(&self) -> impl Iterator<Item = Coord<I>> {
+    fn coords<I: FromPrimitive<usize>>(&self) -> impl Iterator<Item = Coord<I>> + 'static {
         let (w, h) = (self.width(), self.height());
         (0..h).flat_map(move |y| (0..w).map(move |x| coord(I::from(x), I::from(y))))
     }
@@ -181,19 +182,86 @@ impl<'a> From<&'a Input> for FieldView<'a, u8> {
 }
 
 pub struct FieldMutView<'a, T> {
-    data: &'a mut [T],
+    data_ptr: *mut T,
+    len: usize,
     width: usize,
     height: usize,
     stride: usize,
+    #[allow(dead_code)] // `owned` is not read, but it is necessary to keep the data alive
+    owned: Option<Box<[T]>>,
+    _ref: PhantomData<&'a mut [T]>,
 }
 
 impl<'a, T> FieldMutView<'a, T> {
-    pub fn new(data: &'a mut [T], width: usize, stride: usize, height: usize) -> Self {
+    pub fn from_ref(data: &'a mut [T], width: usize, stride: usize, height: usize) -> Self {
         Self {
-            data: &mut data[..height * stride - stride + width],
+            data_ptr: data.as_mut_ptr(),
+            len: data.len(),
             width,
             height,
             stride,
+            owned: None,
+            _ref: PhantomData,
+        }
+    }
+}
+
+impl<T> FieldMutView<'_, T> {
+    pub fn create_from_clone(data: &[T], width: usize, stride: usize, height: usize) -> Self
+    where
+        T: Clone,
+    {
+        let mut owned = data.to_vec().into_boxed_slice();
+        Self {
+            data_ptr: owned.as_mut_ptr(),
+            len: data.len(),
+            width,
+            height,
+            stride,
+            owned: Some(owned),
+            _ref: PhantomData,
+        }
+    }
+
+    pub fn create_with_value(fill: T, width: usize, stride: usize, height: usize) -> Self
+    where
+        T: Clone,
+    {
+        let len = stride * height;
+        let mut owned = vec![fill; len].into_boxed_slice();
+        Self {
+            data_ptr: owned.as_mut_ptr(),
+            len,
+            width,
+            height,
+            stride,
+            owned: Some(owned),
+            _ref: PhantomData,
+        }
+    }
+
+    pub fn create_with_default(width: usize, stride: usize, height: usize) -> Self
+    where
+        T: Default,
+    {
+        Self::create_with(width, stride, height, Default::default)
+    }
+
+    pub fn create_with(width: usize, stride: usize, height: usize, f: impl FnMut() -> T) -> Self {
+        let len = stride * height;
+        let mut owned = {
+            let mut v = Vec::<T>::new();
+            v.resize_with(len, f);
+            v.into_boxed_slice()
+        };
+        Self {
+            data_ptr: owned.as_mut_ptr(),
+            len,
+            width,
+            height,
+            stride,
+            owned: Some(owned),
+            _ref: PhantomData,
         }
     }
 }
@@ -214,52 +282,54 @@ impl<'a, T> Field for FieldMutView<'a, T> {
     }
 
     fn data(&self) -> &[T] {
-        self.data
+        unsafe { std::slice::from_raw_parts(self.data_ptr, self.len) }
     }
 }
 
 impl<'a, T> FieldMut for FieldMutView<'a, T> {
     fn data_mut(&mut self) -> &mut [T] {
-        self.data
+        unsafe { std::slice::from_raw_parts_mut(self.data_ptr, self.len) }
     }
 }
 
 impl<'a, T, I: PrimitiveInt + ToPrimitive<usize>> Index<I> for FieldMutView<'a, T> {
     type Output = T;
     fn index(&self, index: I) -> &Self::Output {
-        &self.data[index.to()]
+        &self.data()[index.to()]
     }
 }
 
 impl<'a, T, I: PrimitiveInt + ToPrimitive<usize>> Index<(I, I)> for FieldMutView<'a, T> {
     type Output = T;
     fn index(&self, pos: (I, I)) -> &Self::Output {
-        &self.data[self.offset(pos.0, pos.1)]
+        &self.data()[self.offset(pos.0, pos.1)]
     }
 }
 
 impl<'a, T, I: PrimitiveInt + ToPrimitive<usize>> Index<Coord<I>> for FieldMutView<'a, T> {
     type Output = T;
     fn index(&self, pos: Coord<I>) -> &Self::Output {
-        &self.data[self.offset(pos.x, pos.y)]
+        &self.data()[self.offset(pos.x, pos.y)]
     }
 }
 
 impl<'a, T, I: PrimitiveInt + ToPrimitive<usize>> IndexMut<I> for FieldMutView<'a, T> {
     fn index_mut(&mut self, index: I) -> &mut Self::Output {
-        &mut self.data[index.to()]
+        &mut self.data_mut()[index.to()]
     }
 }
 
 impl<'a, T, I: PrimitiveInt + ToPrimitive<usize>> IndexMut<(I, I)> for FieldMutView<'a, T> {
     fn index_mut(&mut self, pos: (I, I)) -> &mut Self::Output {
-        &mut self.data[self.offset(pos.0, pos.1)]
+        let o = self.offset(pos.0, pos.1);
+        &mut self.data_mut()[o]
     }
 }
 
 impl<'a, T, I: PrimitiveInt + ToPrimitive<usize>> IndexMut<Coord<I>> for FieldMutView<'a, T> {
     fn index_mut(&mut self, pos: Coord<I>) -> &mut Self::Output {
-        &mut self.data[self.offset(pos.x, pos.y)]
+        let o = self.offset(pos.x, pos.y);
+        &mut self.data_mut()[o]
     }
 }
 
@@ -269,7 +339,7 @@ impl<'a> From<&'a mut [u8]> for FieldMutView<'a, u8> {
         let width = b.iter().position(|&c| c == b'\r' || c == b'\n').unwrap();
         let stride = width + 1 + ((b[width] == b'\r') as usize);
         let height = b.len().div_ceil(stride);
-        Self::new(b, width, stride, height)
+        Self::from_ref(b, width, stride, height)
     }
 }
 

@@ -74,7 +74,7 @@ fn main() -> Result<()> {
 
     let mut robot = coord(robot_start.x * 2, robot_start.y);
     let mut checked_vec = vec![false; field.width() * field.height()];
-    let mut checked = FieldMutView::new(
+    let mut checked = FieldMutView::from_ref(
         &mut checked_vec,
         field.width(),
         field.width(),
