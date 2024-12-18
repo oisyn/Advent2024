@@ -27,6 +27,18 @@ pub trait Field {
         self.tuple_from_offset(o).into()
     }
 
+    fn in_bounds<I: PrimitiveInt + ToPrimitive<usize>>(&self, x: I, y: I) -> bool {
+        x.to() < self.width() && y.to() < self.height()
+    }
+
+    fn in_bounds_tuple<I: PrimitiveInt + ToPrimitive<usize>>(&self, p: (I, I)) -> bool {
+        self.in_bounds(p.0, p.1)
+    }
+
+    fn in_bounds_coord<I: PrimitiveInt + ToPrimitive<usize>>(&self, p: Coord<I>) -> bool {
+        self.in_bounds(p.x, p.y)
+    }
+
     fn get<I: PrimitiveInt + ToPrimitive<usize>>(&self, x: I, y: I) -> &Self::Item {
         &self.data()[self.offset(x, y)]
     }
@@ -116,6 +128,13 @@ impl<'a, T> FieldView<'a, T> {
             stride,
         }
     }
+
+    pub fn to_owned(self) -> FieldMutView<'static, T>
+    where
+        T: Clone,
+    {
+        FieldMutView::create_from_clone(self.data, self.width, self.stride, self.height)
+    }
 }
 
 impl<'a, T> Field for FieldView<'a, T> {
@@ -204,9 +223,21 @@ impl<'a, T> FieldMutView<'a, T> {
             _ref: PhantomData,
         }
     }
+
+    pub fn to_owned(self) -> FieldMutView<'static, T>
+    where
+        T: Clone,
+    {
+        if self.owned.is_some() {
+            // SAFETY: Since this is an owning FieldMutView, we know that the named lifetime 'a is actually just 'static
+            unsafe { std::mem::transmute(self) }
+        } else {
+            FieldMutView::create_from_clone(self.data(), self.width, self.stride, self.height)
+        }
+    }
 }
 
-impl<T> FieldMutView<'_, T> {
+impl<T> FieldMutView<'static, T> {
     pub fn create_from_clone(data: &[T], width: usize, stride: usize, height: usize) -> Self
     where
         T: Clone,
@@ -281,12 +312,13 @@ impl<'a, T> Field for FieldMutView<'a, T> {
         self.stride
     }
 
-    fn data(&self) -> &[T] {
+    fn data<'s>(&'s self) -> &'s [T] {
         unsafe { std::slice::from_raw_parts(self.data_ptr, self.len) }
     }
 }
 
 impl<'a, T> FieldMut for FieldMutView<'a, T> {
+    // fn data_mut<'s>(&'s mut self) -> &'s mut [T] {
     fn data_mut(&mut self) -> &mut [T] {
         unsafe { std::slice::from_raw_parts_mut(self.data_ptr, self.len) }
     }
