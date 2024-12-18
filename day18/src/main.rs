@@ -62,28 +62,35 @@ fn main() -> Result<()> {
         panic!("Path not found!");
     };
 
-    let mut queue = VecDeque::with_capacity(1000);
     let total2 = 'done: {
-        'next: for s in part1_steps + 1..=coords.len() {
+        let mut queue = VecDeque::with_capacity(1000);
+        let mut min = part1_steps + 1;
+        let mut max = coords.len() + 1;
+        'next: loop {
+            if (max - min) == 1 {
+                break 'done coords[min];
+            }
+
             queue.clear();
             visited.data_mut().fill(false);
             queue.push_back(coord(0, 0));
             visited[0] = true;
+            let mid = (max + min) / 2;
             while let Some(pos) = queue.pop_front() {
                 for n in pos.neighbors4() {
                     if n == end_pos {
+                        min = mid;
                         continue 'next;
                     }
-                    if field.in_bounds_coord(n) && field[n] > s as u16 && !visited[n] {
+                    if field.in_bounds_coord(n) && field[n] > mid as u16 && !visited[n] {
                         visited[n] = true;
                         queue.push_back(n);
                     }
                 }
             }
 
-            break 'done coords[s - 1];
+            max = mid;
         }
-        unreachable!("Path is never blocked");
     };
 
     drop(input);
