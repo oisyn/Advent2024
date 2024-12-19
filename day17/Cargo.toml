@@ -11,4 +11,3 @@ repository.workspace = true
 [dependencies]
 anyhow.workspace = true
 util.workspace = true
-itertools.workspace = true

@@ -1,9 +1,6 @@
 #![allow(dead_code)]
 
-use std::collections::HashSet;
-
 use anyhow::Result;
-use itertools::Itertools;
 use util::*;
 
 struct VM {
@@ -30,9 +27,6 @@ impl VM {
                 7 => u64::MAX,
                 _ => unreachable!("Invalid operand: {}", operand),
             };
-            // println!(
-            //     "{opcode} {operand}/{combo} | A:{reg_a} B:{reg_b} C:{reg_c} PC:{pc} OUT:{out}"
-            // );
             match opcode {
                 0 => self.reg_a >>= combo,
                 1 => self.reg_b ^= operand as u64,
@@ -64,11 +58,11 @@ fn main() -> Result<()> {
         .parse()
         .unwrap();
     let reg_b = Parser::new(lines.next().unwrap())
-        .expect("Register A: ")
+        .expect("Register B: ")
         .parse()
         .unwrap();
     let reg_c = Parser::new(lines.next().unwrap())
-        .expect("Register A: ")
+        .expect("Register C: ")
         .parse()
         .unwrap();
     lines.next();
@@ -85,7 +79,7 @@ fn main() -> Result<()> {
         opcodes,
     };
 
-    let mut out = String::new();
+    let mut out = String::with_capacity(32);
     vm.run(|c| {
         if !out.is_empty() {
             out.push(',');
@@ -96,64 +90,51 @@ fn main() -> Result<()> {
 
     let mut part2 = u64::MAX;
     let orig_opcodes = vm.opcodes.clone();
-    let mut lower_bits = HashSet::with_capacity(10000);
-    lower_bits.insert(0);
-    let mut next_lower_bits = HashSet::with_capacity(10000);
-    for num in 1..=orig_opcodes.len() {
-        let wanted = &orig_opcodes[0..num];
-        // println!("{wanted:?} {} combos", lower_bits.len());
+    let mut upper_bits = Vec::with_capacity(32);
+    let mut next_upper_bits = Vec::with_capacity(32);
+    let mut set = vec![false; 1024];
+    upper_bits.push(0);
 
-        let shift = (num - 1) as u64 * 3;
-        let mask = (1 << shift + 3) - 1;
+    'outer: for num in 1..=orig_opcodes.len() {
+        let wanted = &orig_opcodes[orig_opcodes.len() - num..];
 
-        // println!("MASK****{:056b}", 1023_u64 << shift);
-        // for &l in lower_bits.iter().sorted() {
+        // println!("{wanted:?} {} combos", upper_bits.len());
+        // for &l in upper_bits.iter() {
         //     println!("{l:064b}");
         // }
 
-        for i in 0..1024_u64 {
-            let upper = i << shift;
-            for &lower in &lower_bits {
+        for &upper in &upper_bits {
+            for lower in 0..8_u64 {
                 let reg_a = upper | lower;
+                if set[(reg_a & 1023) as usize] {
+                    continue;
+                }
                 vm.reg_a = reg_a;
                 vm.reg_b = reg_b;
                 vm.reg_c = reg_c;
                 vm.pc = 0;
 
-                // print!("{reg_a}: ");
                 let mut pos = 0;
-                let halted = !vm.run(|c| {
-                    // print!("{c},");
-                    pos >= orig_opcodes.len() || c != orig_opcodes[pos.post_inc()]
-                });
-                if pos >= wanted.len() {
-                    if halted && (pos == orig_opcodes.len()) {
-                        if part2 > reg_a {
-                            part2 = reg_a;
-                        }
-                        next_lower_bits.insert(reg_a);
-                    } else if !halted && pos != orig_opcodes.len() && pos >= wanted.len() {
-                        // println!("found {reg_a} for {wanted:?}");
-                        next_lower_bits.insert(reg_a & mask);
+                let halted = !vm.run(|c| pos >= wanted.len() || c != wanted[pos.post_inc()]);
+
+                if halted && pos >= wanted.len() {
+                    if pos == orig_opcodes.len() {
+                        part2 = reg_a;
+                        break 'outer;
+                    } else {
+                        set[(reg_a & 1023) as usize] = true;
+                        next_upper_bits.push(reg_a << 3);
                     }
                 }
-                // println!("");
             }
         }
-        std::mem::swap(&mut lower_bits, &mut next_lower_bits);
-        next_lower_bits.clear();
-
-        if part2 < u64::MAX {
-            break;
-        }
+        std::mem::swap(&mut upper_bits, &mut next_upper_bits);
+        set.fill(false);
+        next_upper_bits.clear();
     }
 
     drop(input);
     println!("{out} - {part2}");
-
-    // for &l in lower_bits.iter().sorted() {
-    //     println!("{l:064b}");
-    // }
 
     Ok(())
 }
