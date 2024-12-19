@@ -206,8 +206,7 @@ pub struct FieldMutView<'a, T> {
     width: usize,
     height: usize,
     stride: usize,
-    #[allow(dead_code)] // `owned` is not read, but it is necessary to keep the data alive
-    owned: Option<Box<[T]>>,
+    _owned: Option<Box<[T]>>,
     _ref: PhantomData<&'a mut [T]>,
 }
 
@@ -219,7 +218,7 @@ impl<'a, T> FieldMutView<'a, T> {
             width,
             height,
             stride,
-            owned: None,
+            _owned: None,
             _ref: PhantomData,
         }
     }
@@ -228,7 +227,7 @@ impl<'a, T> FieldMutView<'a, T> {
     where
         T: Clone,
     {
-        if self.owned.is_some() {
+        if self._owned.is_some() {
             // SAFETY: Since this is an owning FieldMutView, we know that the named lifetime 'a is actually just 'static
             unsafe { std::mem::transmute(self) }
         } else {
@@ -249,7 +248,7 @@ impl<T> FieldMutView<'static, T> {
             width,
             height,
             stride,
-            owned: Some(owned),
+            _owned: Some(owned),
             _ref: PhantomData,
         }
     }
@@ -266,7 +265,7 @@ impl<T> FieldMutView<'static, T> {
             width,
             height,
             stride,
-            owned: Some(owned),
+            _owned: Some(owned),
             _ref: PhantomData,
         }
     }
@@ -291,7 +290,7 @@ impl<T> FieldMutView<'static, T> {
             width,
             height,
             stride,
-            owned: Some(owned),
+            _owned: Some(owned),
             _ref: PhantomData,
         }
     }
