@@ -44,29 +44,33 @@ impl Trie {
         self.nodes[node][END] = 0;
     }
 
-    fn pass_impl(&self, len_checked: &mut u64, s: &[u8]) -> bool {
-        if *len_checked & (1_u64 << s.len()) != 0 {
-            return false;
+    fn pass_impl(&self, len_checked: &mut [u64], s: &[u8]) -> u64 {
+        if len_checked[s.len()] != u64::MAX {
+            return len_checked[s.len()];
         }
-        *len_checked |= 1_u64 << s.len();
 
         let mut node = 0;
-        for i in 0..s.len() {
-            if node != 0 && self.nodes[node][END] == 0 && self.pass_impl(len_checked, &s[i..]) {
-                return true;
+        let mut count = 0;
+        'check: {
+            for i in 0..s.len() {
+                if node != 0 && self.nodes[node][END] == 0 {
+                    count += self.pass_impl(len_checked, &s[i..]);
+                }
+                let idx = LOOKUP[s[i] as usize] as usize;
+                let next = self.nodes[node][idx];
+                if next == INVALID {
+                    break 'check;
+                }
+                node = next as usize;
             }
-            let idx = LOOKUP[s[i] as usize] as usize;
-            let next = self.nodes[node][idx];
-            if next == INVALID {
-                return false;
-            }
-            node = next as usize;
+            count += (self.nodes[node][END] == 0) as u64;
         }
-        self.nodes[node][END] == 0
+        len_checked[s.len()] = count;
+        count
     }
 
-    fn pass(&self, s: &[u8]) -> bool {
-        self.pass_impl(&mut 0, s)
+    fn pass(&self, s: &[u8]) -> u64 {
+        self.pass_impl(&mut [u64::MAX; 64], s)
     }
 }
 
@@ -83,9 +87,11 @@ fn main() -> Result<()> {
 
     lines.next();
     let mut total1 = 0;
-    let total2 = 0;
+    let mut total2 = 0;
     for l in lines {
-        total1 += trie.pass(l.as_bytes()) as u32;
+        let c = trie.pass(l.as_bytes());
+        total1 += (c > 0) as u32;
+        total2 += c;
     }
 
     drop(input);
