@@ -1,5 +1,3 @@
-use std::marker::PhantomData;
-
 use crate::*;
 
 pub struct Parser<'a> {
@@ -101,12 +99,27 @@ impl<'a> Parser<'a> {
         <T as FromParser<'a>>::parse_from(self)
     }
 
-    pub fn parse_iter<T: FromParser<'a>>(&'a mut self, separator: &'a str) -> ParseIter<'a, T> {
+    pub fn parse_with<T: 'a>(&mut self, f: impl FnOnce(&mut Self) -> Option<T>) -> Option<T> {
+        f(self)
+    }
+
+    pub fn parse_iter<'p, 's, T: FromParser<'a>>(
+        &'p mut self,
+        separator: &'s str,
+    ) -> ParseIter<'a, 'p, 's, T, impl FnMut(&mut Self) -> Option<T>> {
+        self.parse_iter_with(separator, FromParser::parse_from)
+    }
+
+    pub fn parse_iter_with<'p, 's, T: 'a, F: FnMut(&mut Self) -> Option<T>>(
+        &'p mut self,
+        separator: &'s str,
+        f: F,
+    ) -> ParseIter<'a, 'p, 's, T, F> {
         ParseIter {
             parser: self,
+            func: f,
             sep: separator,
             skip: false,
-            _data: PhantomData,
         }
     }
 }
@@ -115,14 +128,18 @@ pub trait FromParser<'p>: Sized + 'p {
     fn parse_from(parser: &mut Parser<'p>) -> Option<Self>;
 }
 
-pub struct ParseIter<'a, T: FromParser<'a>> {
-    parser: &'a mut Parser<'a>,
-    sep: &'a str,
+pub struct ParseIter<'a, 'p, 's, T: 'a, F: FnMut(&mut Parser<'a>) -> Option<T>> {
+    parser: &'p mut Parser<'a>,
+    func: F,
+    sep: &'s str,
     skip: bool,
-    _data: PhantomData<T>,
 }
 
-impl<'a, T: FromParser<'a>> Iterator for ParseIter<'a, T> {
+impl<'a, 'p, 's, T, F> Iterator for ParseIter<'a, 'p, 's, T, F>
+where
+    T: 'a,
+    F: FnMut(&mut Parser<'a>) -> Option<T>,
+{
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -134,7 +151,7 @@ impl<'a, T: FromParser<'a>> Iterator for ParseIter<'a, T> {
             self.parser.expect(self.sep);
         }
 
-        self.parser.parse()
+        (self.func)(self.parser)
     }
 }
 
