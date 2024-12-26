@@ -149,7 +149,7 @@ fn main() -> Result<()> {
         total1 |= eval(&mut data, &sources, &mut visited, i) as (u64) << i;
     }
 
-    fn find_gates(
+    fn find_gate(
         annotation: Annotation,
         annotations: &mut [Annotation],
         sources: &mut [(usize, usize, Op)],
@@ -180,9 +180,9 @@ fn main() -> Result<()> {
         }
 
         let (op, a1, a2) = annotation.expected_parts();
-        let in1 = find_gates(a1, annotations, sources, names, annotated_gates, swaps);
+        let in1 = find_gate(a1, annotations, sources, names, annotated_gates, swaps);
         assert_eq!(annotations[in1], a1);
-        let in2 = find_gates(a2, annotations, sources, names, annotated_gates, swaps);
+        let in2 = find_gate(a2, annotations, sources, names, annotated_gates, swaps);
         assert_eq!(annotations[in2], a2);
         if let Some(idx) = sources
             .iter()
@@ -230,14 +230,12 @@ fn main() -> Result<()> {
     let mut annotated_gates = HashMap::with_capacity(data.len());
     let mut swaps = Vec::with_capacity(4);
     for i in 0..=max_z {
-        let a = if i == 0 {
-            Annotation::HalfAdd(0)
-        } else if i == max_z {
-            Annotation::FullCarry(i as u8 - 1)
-        } else {
-            Annotation::FullAdd(i as u8)
+        let a = match i {
+            0 => Annotation::HalfAdd(0),
+            i if i == max_z => Annotation::FullCarry(i as u8 - 1),
+            i => Annotation::FullAdd(i as u8),
         };
-        let idx = find_gates(
+        let idx = find_gate(
             a,
             &mut annotations,
             &mut sources,
