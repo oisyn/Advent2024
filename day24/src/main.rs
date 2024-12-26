@@ -181,9 +181,7 @@ fn main() -> Result<()> {
 
         let (op, a1, a2) = annotation.expected_parts();
         let in1 = find_gate(a1, annotations, sources, names, annotated_gates, swaps);
-        assert_eq!(annotations[in1], a1);
         let in2 = find_gate(a2, annotations, sources, names, annotated_gates, swaps);
-        assert_eq!(annotations[in2], a2);
         if let Some(idx) = sources
             .iter()
             .position(|&e| e == (in1, in2, op) || e == (in2, in1, op))
