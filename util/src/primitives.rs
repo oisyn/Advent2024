@@ -1,4 +1,4 @@
-pub trait Primitive: Copy + ToPrimitive<usize> + FromPrimitive<usize> {}
+pub trait Primitive: Copy {}
 pub trait PrimitiveInt: Primitive {}
 pub trait PrimitiveFloat: Primitive {}
 
@@ -65,32 +65,6 @@ macro_rules! impl_increments {
 }
 
 impl_increments!(i8, i16, i32, i64, i128, isize, u8, u16, u32, u64, u128, usize, f32, f64);
-
-impl Increment for bool {
-    fn pre_inc(&mut self) -> Self {
-        *self = true;
-        true
-    }
-    fn post_inc(&mut self) -> Self {
-        std::mem::replace(self, true)
-    }
-    fn get_inc(self) -> Self {
-        true
-    }
-}
-
-impl Decrement for bool {
-    fn pre_dec(&mut self) -> Self {
-        *self = false;
-        false
-    }
-    fn post_dec(&mut self) -> Self {
-        std::mem::replace(self, false)
-    }
-    fn get_dec(self) -> Self {
-        false
-    }
-}
 
 macro_rules! impl_to_primitive {
     ($t:ty => $($u:ty),+) => {

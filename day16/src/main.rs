@@ -142,7 +142,7 @@ fn main() -> Result<()> {
         let mut total = 0;
         loop {
             let (pos, dir) = pos_dir.into();
-            total += !visited[pos].post_inc() as u32;
+            total += !visited[pos].exchange(true) as u32;
             let e = &mut reverse[pos][dir as usize];
             let dirs = *e >> FLAG_SHIFT;
             if pos == end || dirs == 0 {

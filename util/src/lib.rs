@@ -13,6 +13,14 @@ pub use field::*;
 mod coord;
 pub use coord::*;
 
+pub trait Exchange: Sized {
+    fn exchange(&mut self, value: Self) -> Self {
+        std::mem::replace(self, value)
+    }
+}
+
+impl<T> Exchange for T {}
+
 pub fn to_str(b: &[u8]) -> &str {
     unsafe { std::str::from_utf8_unchecked(b) }
 }

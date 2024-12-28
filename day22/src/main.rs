@@ -26,7 +26,7 @@ fn main() -> Result<()> {
             seq |= diff & 0x1f;
             seq &= 0xfffff;
 
-            if i >= 4 && !done[seq as usize].post_inc() {
+            if i >= 4 && !done[seq as usize].exchange(true) {
                 let bananas = &mut map[seq as usize];
                 *bananas += num;
                 total2 = total2.max(*bananas);

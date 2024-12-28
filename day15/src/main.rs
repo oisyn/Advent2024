@@ -166,11 +166,11 @@ fn main() -> Result<()> {
                         (c0, c1) => {
                             if c0 == b'[' {
                                 queue.push(pos);
-                            } else if c0 == b']' && !checked[pos.left()].post_inc() {
+                            } else if c0 == b']' && !checked[pos.left()].exchange(true) {
                                 queue.push(pos.left());
                             }
 
-                            if c1 == b'[' && !checked[pos.right()].post_inc() {
+                            if c1 == b'[' && !checked[pos.right()].exchange(true) {
                                 queue.push(pos.right());
                             }
                         }
