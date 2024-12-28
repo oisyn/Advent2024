@@ -38,36 +38,39 @@ fn main() -> Result<()> {
             _ => {}
         }
     }
-
-    for i in 0..10000 {
-        if (i - 37_i32).rem_euclid(101) == 0 && (i - 87_i32).rem_euclid(103) == 0 {
-            println!("{i}");
-        }
-    }
-
-    for i in 0..1 {
-        println!("\nSTEP {i}");
-        for r in &mut robots {
-            r.0 += r.1 * 7916;
-            r.0 = coord(r.0.x.rem_euclid(size.x), r.0.y.rem_euclid(size.y));
-        }
-
-        for y in 0..size.y {
-            for x in 0..size.x {
-                let c = robots.iter().filter(|(p, _)| *p == coord(x, y)).count();
-
-                if c == 0 {
-                    print!(".");
-                } else {
-                    print!("#");
-                }
-            }
-            println!();
-        }
-    }
-
     let total1 = quadrants[0] * quadrants[1] * quadrants[2] * quadrants[3];
-    let total2 = 0;
+
+    let mut minscore = coord(i32::MAX, i32::MAX);
+    let mut minpos = coord(0, 0);
+    for i in 0..size.x.max(size.y) {
+        let mut quadrants = [0; 4];
+        for r in &robots {
+            let pos = r.0 + r.1 * i;
+            let pos = coord(pos.x.rem_euclid(size.x), pos.y.rem_euclid(size.y));
+            match pos.tuple() {
+                (x, y) if x < mid.x && y < mid.y => quadrants[0] += 1,
+                (x, y) if x > mid.x && y < mid.y => quadrants[1] += 1,
+                (x, y) if x < mid.x && y > mid.y => quadrants[2] += 1,
+                (x, y) if x > mid.x && y > mid.y => quadrants[3] += 1,
+                _ => {}
+            }
+        }
+        let score = coord(
+            (quadrants[0] + quadrants[2]) * (quadrants[1] + quadrants[3]),
+            (quadrants[0] + quadrants[1]) * (quadrants[2] + quadrants[3]),
+        );
+        if minscore.x > score.x {
+            minscore.x = score.x;
+            minpos.x = i;
+        }
+        if minscore.y > score.y {
+            minscore.y = score.y;
+            minpos.y = i;
+        }
+    }
+
+    let (_, x, y) = extended_euclidian(size.x, size.y);
+    let total2 = (minpos.x * y * size.y + minpos.y * x * size.x) % (size.x * size.y);
 
     drop(input);
     println!("{total1} - {total2}");
