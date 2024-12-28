@@ -2,7 +2,6 @@
 
 use std::collections::HashMap;
 
-use anyhow::Result;
 use util::*;
 
 #[derive(Clone, Debug)]
@@ -11,8 +10,8 @@ struct Node<'a> {
     edges: Vec<usize>,
 }
 
-fn main() -> Result<()> {
-    let input = open_input("day23")?;
+#[aoc_day]
+fn solve(input: Input) -> impl AocResult {
     let mut nodes = Vec::with_capacity(1000);
     let mut names = HashMap::with_capacity(1000);
 
@@ -99,9 +98,5 @@ fn main() -> Result<()> {
     let mut max_names = max.iter().map(|&i| nodes[i].name).collect::<Vec<_>>();
     max_names.sort();
 
-    println!("{total1}");
-    println!("{}", max_names.join(","));
-    drop(input);
-
-    Ok(())
+    (total1, max_names.join(","))
 }

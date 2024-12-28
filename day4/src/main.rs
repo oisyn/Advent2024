@@ -1,8 +1,7 @@
-use anyhow::Result;
 use util::*;
 
-fn main() -> Result<()> {
-    let input = open_input("day4")?;
+#[aoc_day]
+fn solve(input: Input) -> impl AocResult {
     let field = FieldView::from(&input);
     let width = field.width();
     let height = field.height();
@@ -81,8 +80,5 @@ fn main() -> Result<()> {
         base += 1;
     }
 
-    drop(input);
-    println!("{total1} - {total2}");
-
-    Ok(())
+    (total1, total2)
 }

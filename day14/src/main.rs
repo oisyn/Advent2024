@@ -1,11 +1,9 @@
 #![allow(dead_code)]
 
-use anyhow::Result;
 use util::*;
 
-fn main() -> Result<()> {
-    let input = open_input("day14")?;
-
+#[aoc_day]
+fn solve(input: Input) -> impl AocResult {
     let size = match input.is_example() {
         false => coord(101, 103),
         true => coord(11, 7),
@@ -72,8 +70,5 @@ fn main() -> Result<()> {
     let (_, x, y) = extended_euclidian(size.x, size.y);
     let total2 = (minpos.x * y * size.y + minpos.y * x * size.x) % (size.x * size.y);
 
-    drop(input);
-    println!("{total1} - {total2}");
-
-    Ok(())
+    (total1, total2)
 }

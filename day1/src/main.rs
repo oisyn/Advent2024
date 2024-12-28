@@ -1,9 +1,7 @@
-use anyhow::Result;
 use util::*;
 
-fn main() -> Result<()> {
-    let input = open_input("day1")?;
-
+#[aoc_day]
+fn solve(input: Input) -> impl AocResult {
     let mut left = Vec::with_capacity(1000);
     let mut right = Vec::with_capacity(1000);
 
@@ -55,8 +53,5 @@ fn main() -> Result<()> {
         rest = &rest[end..];
     }
 
-    drop(input);
-    println!("{total1} - {total2}");
-
-    Ok(())
+    (total1, total2)
 }

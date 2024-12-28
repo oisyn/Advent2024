@@ -1,10 +1,9 @@
 #![allow(dead_code)]
 
-use anyhow::Result;
 use util::*;
 
-fn main() -> Result<()> {
-    let input = open_input("day13")?;
+#[aoc_day]
+fn solve(input: Input) -> impl AocResult {
     let mut lines = input.lines();
 
     let mut total1 = 0;
@@ -68,8 +67,5 @@ fn main() -> Result<()> {
         lines.next();
     }
 
-    drop(input);
-    println!("{total1} - {total2}");
-
-    Ok(())
+    (total1, total2)
 }

@@ -2,7 +2,6 @@
 
 use std::{collections::HashMap, hash::Hash};
 
-use anyhow::Result;
 use util::*;
 
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
@@ -67,8 +66,8 @@ impl Annotation {
     }
 }
 
-fn main() -> Result<()> {
-    let input = open_input("day24")?;
+#[aoc_day]
+fn solve(input: Input) -> impl AocResult {
     let mut lines = input.lines();
     let mut names = HashMap::with_capacity(500);
     let mut data = vec![0_u8; 64];
@@ -269,8 +268,5 @@ fn main() -> Result<()> {
     swapped_names.sort();
     let total2 = swapped_names.join(",");
 
-    drop(input);
-    println!("{total1} - {total2}");
-
-    Ok(())
+    (total1, total2)
 }

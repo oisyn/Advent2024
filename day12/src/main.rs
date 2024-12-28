@@ -1,6 +1,5 @@
 #![allow(dead_code)]
 
-use anyhow::Result;
 use util::*;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -48,8 +47,8 @@ fn resolve_offset(regions: &Vec<RegionRef>, mut offset: usize) -> usize {
     }
 }
 
-fn main() -> Result<()> {
-    let input = open_input("day12")?;
+#[aoc_day]
+fn solve(input: Input) -> impl AocResult {
     let field = FieldView::from(&input);
     let mut regions = Vec::with_capacity(1000);
     let mut regids = vec![0; field.data().len()];
@@ -195,8 +194,5 @@ fn main() -> Result<()> {
         })
         .sum::<u64>();
 
-    drop(input);
-    println!("{total1} - {total2}");
-
-    Ok(())
+    (total1, total2)
 }

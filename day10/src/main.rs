@@ -1,11 +1,10 @@
-use anyhow::Result;
 use std::collections::{HashSet, VecDeque};
 use util::*;
 
 const DIRS: [Coord<i32>; 4] = [coord(1, 0), coord(0, 1), coord(-1, 0), coord(0, -1)];
 
-fn main() -> Result<()> {
-    let input = open_input("day10")?;
+#[aoc_day]
+fn solve(input: Input) -> impl AocResult {
     let field = BorderedFieldView::new(FieldView::from(&input), b' ');
 
     let mut total1 = 0;
@@ -69,8 +68,5 @@ fn main() -> Result<()> {
         }
     }
 
-    drop(input);
-    println!("{total1} - {total2}");
-
-    Ok(())
+    (total1, total2)
 }

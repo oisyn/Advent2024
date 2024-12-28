@@ -1,12 +1,11 @@
 #![allow(dead_code)]
 
-use anyhow::Result;
 use core::slice;
 use itertools::*;
 use util::*;
 
-fn main() -> Result<()> {
-    let input = open_input("day15")?;
+#[aoc_day]
+fn solve(input: Input) -> impl AocResult {
     let (field_in, code_in) = input.paragraphs().collect_tuple().unwrap();
     let mut field_vec = Vec::from(field_in.as_bytes());
     let mut field = FieldMutView::from(field_vec.as_mut_slice());
@@ -201,8 +200,5 @@ fn main() -> Result<()> {
         })
         .sum::<u64>();
 
-    drop(input);
-    println!("{total1} - {total2}");
-
-    Ok(())
+    (total1, total2)
 }

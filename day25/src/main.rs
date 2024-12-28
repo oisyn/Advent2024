@@ -1,11 +1,9 @@
 #![allow(dead_code)]
 
-use anyhow::Result;
 use util::*;
 
-fn main() -> Result<()> {
-    let input = open_input("day25")?;
-
+#[aoc_day]
+fn solve(input: Input) -> impl AocResult {
     let mut locks = Vec::with_capacity(100);
     let mut keys = Vec::with_capacity(100);
 
@@ -38,10 +36,5 @@ fn main() -> Result<()> {
         }
     }
 
-    let total2 = 0;
-
-    drop(input);
-    println!("{total1} - {total2}");
-
-    Ok(())
+    (total1, 0)
 }

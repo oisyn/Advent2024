@@ -2,15 +2,14 @@
 
 use std::collections::VecDeque;
 
-use anyhow::Result;
 use itertools::*;
 use util::*;
 
 const EXAMPLE_SIZE: Coord<i32> = coord(7, 7);
 const INPUT_SIZE: Coord<i32> = coord(71, 71);
 
-fn main() -> Result<()> {
-    let input = open_input("day18")?;
+#[aoc_day]
+fn solve(input: Input) -> impl AocResult {
     let coords = input
         .lines()
         .map(|l| {
@@ -93,8 +92,5 @@ fn main() -> Result<()> {
         }
     };
 
-    drop(input);
-    println!("{total1} - {total2}");
-
-    Ok(())
+    (total1, total2)
 }

@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use anyhow::Result;
 use util::*;
 
 fn split(n: u64) -> Option<(u64, u64)> {
@@ -48,8 +47,8 @@ fn num_stones_from_number(n: u64, steps_left: i32, mem: &mut HashMap<(u64, i32),
 const STEPS1: i32 = 25;
 const STEPS2: i32 = 75;
 
-fn main() -> Result<()> {
-    let input = open_input("day11")?;
+#[aoc_day]
+fn solve(input: Input) -> impl AocResult {
     let mut mem = HashMap::with_capacity(100000);
     let (total1, total2) = Parser::new(input.str())
         .parse_iter::<u64>(" ")
@@ -63,8 +62,5 @@ fn main() -> Result<()> {
 
     println!("{:?}", mem.len());
 
-    drop(input);
-    println!("{total1} - {total2}");
-
-    Ok(())
+    (total1, total2)
 }

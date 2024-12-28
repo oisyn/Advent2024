@@ -5,7 +5,6 @@ use std::{
     collections::{BinaryHeap, HashMap},
 };
 
-use anyhow::Result;
 use util::*;
 
 const DIRS: [Coord<i32>; 4] = [coord(1, 0), coord(0, 1), coord(-1, 0), coord(0, -1)];
@@ -45,8 +44,8 @@ impl From<CoordAndDir> for (Coord<i32>, u32) {
     }
 }
 
-fn main() -> Result<()> {
-    let input = open_input("day16")?;
+#[aoc_day]
+fn solve(input: Input) -> impl AocResult {
     let field = FieldView::from(&input);
 
     let start =
@@ -127,7 +126,7 @@ fn main() -> Result<()> {
 
     if total1 == u32::MAX {
         println!("No path found!");
-        return Ok(());
+        return (0, 0);
     }
 
     let mut visited =
@@ -171,10 +170,5 @@ fn main() -> Result<()> {
         );
     }
 
-    //println!("{reverse_path:#?}");
-
-    drop(input);
-    println!("{total1} - {total2}");
-
-    Ok(())
+    (total1, total2)
 }

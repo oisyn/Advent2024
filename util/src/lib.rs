@@ -13,6 +13,15 @@ pub use field::*;
 mod coord;
 pub use coord::*;
 
+pub use util_macros::aoc_day;
+
+#[macro_export]
+macro_rules! current_day {
+    () => {
+        env!("CARGO_CRATE_NAME")
+    };
+}
+
 pub trait Exchange: Sized {
     fn exchange(&mut self, value: Self) -> Self {
         std::mem::replace(self, value)
@@ -20,6 +29,43 @@ pub trait Exchange: Sized {
 }
 
 impl<T> Exchange for T {}
+
+pub trait AocResult {
+    type Part1: std::fmt::Display;
+    type Part2: std::fmt::Display;
+    type Error: std::error::Error + Send + Sync;
+
+    fn result(self) -> Result<(Self::Part1, Self::Part2), Self::Error>;
+}
+
+impl<T, U> AocResult for (T, U)
+where
+    T: std::fmt::Display,
+    U: std::fmt::Display,
+{
+    type Part1 = T;
+    type Part2 = U;
+    type Error = std::convert::Infallible;
+
+    fn result(self) -> Result<(Self::Part1, Self::Part2), Self::Error> {
+        Ok(self)
+    }
+}
+
+impl<T, U, E> AocResult for Result<(T, U), E>
+where
+    T: std::fmt::Display,
+    U: std::fmt::Display,
+    E: std::error::Error + Send + Sync,
+{
+    type Part1 = T;
+    type Part2 = U;
+    type Error = E;
+
+    fn result(self) -> Result<(Self::Part1, Self::Part2), Self::Error> {
+        self
+    }
+}
 
 pub fn to_str(b: &[u8]) -> &str {
     unsafe { std::str::from_utf8_unchecked(b) }

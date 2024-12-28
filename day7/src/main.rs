@@ -1,4 +1,3 @@
-use anyhow::Result;
 use util::*;
 
 fn next_pow10(v: usize) -> usize {
@@ -35,9 +34,8 @@ fn check(target: usize, n: &[usize], do_concat: bool) -> bool {
     target >= last && check(target - last, n, do_concat)
 }
 
-fn main() -> Result<()> {
-    let input = open_input("day7")?;
-
+#[aoc_day]
+fn solve(input: Input) -> impl AocResult {
     let mut n = Vec::with_capacity(20);
 
     let mut total1 = 0;
@@ -58,8 +56,5 @@ fn main() -> Result<()> {
         }
     }
 
-    drop(input);
-    println!("{total1} - {total2}");
-
-    Ok(())
+    (total1, total2)
 }

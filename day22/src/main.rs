@@ -1,10 +1,9 @@
 #![allow(dead_code)]
 
-use anyhow::Result;
 use util::*;
 
-fn main() -> Result<()> {
-    let input = open_input("day22")?;
+#[aoc_day]
+fn solve(input: Input) -> impl AocResult {
     let mut total1 = 0;
     let mut total2 = 0;
     let mut map = vec![0; 1 << 20];
@@ -36,8 +35,5 @@ fn main() -> Result<()> {
         total1 += n as u64;
     }
 
-    drop(input);
-    println!("{total1} - {total2}");
-
-    Ok(())
+    (total1, total2)
 }

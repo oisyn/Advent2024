@@ -1,6 +1,5 @@
 #![allow(dead_code)]
 
-use anyhow::Result;
 use util::*;
 
 const fn generate_lookup() -> [u8; 128] {
@@ -74,8 +73,8 @@ impl Trie {
     }
 }
 
-fn main() -> Result<()> {
-    let input = open_input("day19")?;
+#[aoc_day]
+fn solve(input: Input) -> impl AocResult {
     let mut lines = input.lines();
     let mut p = Parser::new(lines.next().unwrap());
     let mut trie = Trie::new();
@@ -94,8 +93,5 @@ fn main() -> Result<()> {
         total2 += c;
     }
 
-    drop(input);
-    println!("{total1} - {total2}");
-
-    Ok(())
+    (total1, total2)
 }

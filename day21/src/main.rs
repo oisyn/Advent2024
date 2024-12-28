@@ -1,6 +1,5 @@
 #![allow(dead_code)]
 
-use anyhow::Result;
 use util::*;
 
 const BUTTON_UP: u8 = 0;
@@ -120,8 +119,8 @@ fn dir_str(seq: &[u8]) -> String {
     s
 }
 
-fn main() -> Result<()> {
-    let input = open_input("day21")?;
+#[aoc_day]
+fn solve(input: Input) -> impl AocResult {
     let mut total1 = 0;
     let mut total2 = 0;
 
@@ -155,8 +154,5 @@ fn main() -> Result<()> {
         total2 += weight * len;
     }
 
-    drop(input);
-    println!("{total1} - {total2}");
-
-    Ok(())
+    (total1, total2)
 }

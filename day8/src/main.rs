@@ -1,9 +1,8 @@
-use anyhow::Result;
 use std::collections::{HashMap, HashSet};
 use util::*;
 
-fn main() -> Result<()> {
-    let input = open_input("day8")?;
+#[aoc_day]
+fn solve(input: Input) -> impl AocResult {
     let field = FieldView::from(&input);
 
     let width = field.width() as i32;
@@ -94,8 +93,5 @@ fn main() -> Result<()> {
 
     let total2 = found.len();
 
-    drop(input);
-    println!("{total1} - {total2}");
-
-    Ok(())
+    (total1, total2)
 }

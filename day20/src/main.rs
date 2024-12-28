@@ -1,10 +1,9 @@
 #![allow(dead_code)]
 
-use anyhow::Result;
 use util::*;
 
-fn main() -> Result<()> {
-    let input = open_input("day20")?;
+#[aoc_day]
+fn solve(input: Input) -> impl AocResult {
     let field = FieldView::from(&input);
 
     let start =
@@ -65,8 +64,5 @@ fn main() -> Result<()> {
         }
     }
 
-    drop(input);
-    println!("{total1} - {total2}");
-
-    Ok(())
+    (total1, total2)
 }

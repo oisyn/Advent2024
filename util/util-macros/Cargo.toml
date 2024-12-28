@@ -1,5 +1,5 @@
 [package]
-name = "util"
+name = "util-macros"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
@@ -8,10 +8,9 @@ repository.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[dependencies]
-anyhow.workspace = true
-memmap.workspace = true
-util-macros.workspace = true
+[lib]
+proc-macro = true
 
-[features]
-validation = []
+[dependencies]
+proc-macro2 = "1.0"
+quote = "1.0"

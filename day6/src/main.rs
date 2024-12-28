@@ -1,9 +1,8 @@
-use anyhow::Result;
 use std::collections::HashSet;
 use util::*;
 
-fn main() -> Result<()> {
-    let input = open_input("day6")?;
+#[aoc_day]
+fn solve(input: Input) -> impl AocResult {
     let field = BorderedFieldView::new(FieldView::from(&input), b' ');
 
     const DIRS: [(i32, i32); 4] = [(0, -1), (1, 0), (0, 1), (-1, 0)];
@@ -64,8 +63,5 @@ fn main() -> Result<()> {
 
     let total1 = visited.len();
 
-    drop(input);
-    println!("{total1} - {total2}");
-
-    Ok(())
+    (total1, total2)
 }

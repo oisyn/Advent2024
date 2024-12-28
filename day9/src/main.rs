@@ -1,6 +1,5 @@
 #![allow(non_camel_case_types)]
 
-use anyhow::Result;
 use std::ops::*;
 use util::*;
 
@@ -89,8 +88,8 @@ impl GapList {
     }
 }
 
-fn main() -> Result<()> {
-    let input = open_input("day9")?;
+#[aoc_day]
+fn solve(input: Input) -> impl AocResult {
     let data = {
         let mut b = input.bytes();
         while b.len() > 0 && is_nl(b[b.len() - 1]) {
@@ -166,8 +165,5 @@ fn main() -> Result<()> {
         }
     }
 
-    drop(input);
-    println!("{total1} - {total2}");
-
-    Ok(())
+    (total1, total2)
 }

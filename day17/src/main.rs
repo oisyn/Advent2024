@@ -1,6 +1,5 @@
 #![allow(dead_code)]
 
-use anyhow::Result;
 use util::*;
 
 struct VM {
@@ -50,8 +49,8 @@ impl VM {
     }
 }
 
-fn main() -> Result<()> {
-    let input = open_input("day17")?;
+#[aoc_day]
+fn solve(input: Input) -> impl AocResult {
     let mut lines = input.lines();
     let reg_a = Parser::new(lines.next().unwrap())
         .expect("Register A: ")
@@ -133,8 +132,5 @@ fn main() -> Result<()> {
         next_upper_bits.clear();
     }
 
-    drop(input);
-    println!("{out} - {part2}");
-
-    Ok(())
+    (out, part2)
 }

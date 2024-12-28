@@ -1,9 +1,8 @@
-use anyhow::Result;
 use itertools::*;
 use util::*;
 
-fn main() -> Result<()> {
-    let input = open_input("day2")?;
+#[aoc_day]
+fn solve(input: Input) -> impl AocResult {
 
     let mut total1 = 0;
     let mut total2 = 0;
@@ -46,8 +45,5 @@ fn main() -> Result<()> {
         }
     }
 
-    drop(input);
-    println!("{total1} - {total2}");
-
-    Ok(())
+    (total1, total2)
 }

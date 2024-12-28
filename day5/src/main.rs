@@ -1,10 +1,8 @@
-use anyhow::Result;
 use std::collections::HashMap;
 use util::*;
 
-fn main() -> Result<()> {
-    let input = open_input("day5")?;
-
+#[aoc_day]
+fn solve(input: Input) -> impl AocResult {
     let mut rules: HashMap<i32, Vec<i32>> = HashMap::new();
     let mut lines = input.lines();
 
@@ -74,8 +72,5 @@ fn main() -> Result<()> {
             .1;
     }
 
-    drop(input);
-    println!("{total1} - {total2}");
-
-    Ok(())
+    (total1, total2)
 }

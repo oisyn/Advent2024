@@ -34,6 +34,7 @@ members = [
     "day24",
     "day25",
     "util",
+    "util/util-macros",
 ]
 
 [workspace.dependencies]
@@ -43,3 +44,4 @@ tinyvec = "1.8.0"
 memmap = "0.7.0"
 itertools = "*"
 util = { version = "0.1.0", path = "util" }
+util-macros = { version = "0.1.0", path = "util/util-macros" }
