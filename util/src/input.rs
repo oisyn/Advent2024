@@ -17,6 +17,18 @@ impl Input {
         Paragraphs(self.bytes())
     }
 
+    pub fn nl_size(&self) -> usize {
+        let b = self.bytes();
+        let Some(p) = b.iter().position(|&c| is_nl(c)) else {
+            return 0;
+        };
+        if p + 1 < b.len() && b[p] == b'\r' && b[p + 1] == b'\n' {
+            2
+        } else {
+            1
+        }
+    }
+
     pub fn bytes(&self) -> &[u8] {
         &self.0
     }
